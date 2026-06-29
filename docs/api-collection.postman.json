@@ -1,0 +1,356 @@
+{
+  "info": {
+    "name": "Clinic AI Automation API",
+    "description": "REST API for Clinic AI Automation — managing Patients, Staff (Nurses & Doctors), and Schedules. Base URL: http://localhost:3000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "List All Patients",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/patients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patients"]
+            },
+            "description": "Returns all patients ordered by newest first."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"9e7f7ad8-bbf1-4020-b454-4eedee7b86e9\",\n    \"name\": \"Aditya Pratama\",\n    \"email\": \"aditya.p@email.com\",\n    \"phone\": \"081234567801\",\n    \"date_of_birth\": \"1990-03-15\",\n    \"gender\": \"male\",\n    \"address\": \"Jl. Sudirman No. 10, Jakarta\",\n    \"medical_history\": \"Hypertension, mild asthma\",\n    \"created_at\": \"2026-06-29T22:56:14.970156+00:00\",\n    \"updated_at\": \"2026-06-29T22:56:14.970156+00:00\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/patients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patients"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@email.com\",\n  \"phone\": \"081234567899\",\n  \"date_of_birth\": \"1995-05-20\",\n  \"gender\": \"male\",\n  \"address\": \"Jl. Example No. 1, Jakarta\",\n  \"medical_history\": \"None\"\n}"
+            },
+            "description": "Create a new patient. `name` is required."
+          },
+          "response": [
+            {
+              "name": "Created 201",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": \"abc123...\",\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@email.com\",\n  \"phone\": \"081234567899\",\n  \"date_of_birth\": \"1995-05-20\",\n  \"gender\": \"male\",\n  \"address\": \"Jl. Example No. 1, Jakarta\",\n  \"medical_history\": \"None\",\n  \"created_at\": \"2026-06-29T...\",\n  \"updated_at\": \"2026-06-29T...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patients", "{{patient_id}}"]
+            },
+            "description": "Returns a single patient by UUID."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"9e7f7ad8-bbf1-4020-b454-4eedee7b86e9\",\n  \"name\": \"Aditya Pratama\",\n  \"email\": \"aditya.p@email.com\",\n  \"phone\": \"081234567801\",\n  \"date_of_birth\": \"1990-03-15\",\n  \"gender\": \"male\",\n  \"address\": \"Jl. Sudirman No. 10, Jakarta\",\n  \"medical_history\": \"Hypertension, mild asthma\",\n  \"created_at\": \"2026-06-29T22:56:14.970156+00:00\",\n  \"updated_at\": \"2026-06-29T22:56:14.970156+00:00\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patients", "{{patient_id}}"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Aditya Pratama Updated\",\n  \"email\": \"aditya.p@email.com\",\n  \"phone\": \"081234567801\",\n  \"date_of_birth\": \"1990-03-15\",\n  \"gender\": \"male\",\n  \"address\": \"Jl. Sudirman No. 20, Jakarta\",\n  \"medical_history\": \"Hypertension, mild asthma, allergies\"\n}"
+            },
+            "description": "Update an existing patient. Send all fields (full update)."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"abc123...\",\n  \"name\": \"Aditya Pratama Updated\",\n  ...\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patients", "{{patient_id}}"]
+            },
+            "description": "Delete a patient by UUID."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Staff (Nurses & Doctors)",
+      "item": [
+        {
+          "name": "List All Staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "staff"]
+            },
+            "description": "Returns all staff (doctors and nurses) ordered by newest first."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"abc123...\",\n    \"name\": \"Dr. Ahmad Fauzi\",\n    \"email\": \"ahmad.f@clinic.id\",\n    \"phone\": \"08119876501\",\n    \"role\": \"doctor\",\n    \"specialization\": \"General Medicine\",\n    \"license_number\": \"LIC-2020-001\",\n    \"created_at\": \"2026-06-29T...\",\n    \"updated_at\": \"2026-06-29T...\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Staff",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "staff"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Jane Smith\",\n  \"email\": \"jane.smith@clinic.id\",\n  \"phone\": \"08119876511\",\n  \"role\": \"doctor\",\n  \"specialization\": \"Neurology\",\n  \"license_number\": \"LIC-2023-056\"\n}"
+            },
+            "description": "Create a new staff member. `name` and `role` are required. Role must be `doctor` or `nurse`."
+          },
+          "response": [
+            {
+              "name": "Created 201",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": \"xyz789...\",\n  \"name\": \"Dr. Jane Smith\",\n  ...\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Staff by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/staff/{{staff_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "staff", "{{staff_id}}"]
+            },
+            "description": "Returns a single staff member by UUID."
+          }
+        },
+        {
+          "name": "Update Staff",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/staff/{{staff_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "staff", "{{staff_id}}"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Ahmad Fauzi Updated\",\n  \"email\": \"ahmad.f@clinic.id\",\n  \"phone\": \"08119876501\",\n  \"role\": \"doctor\",\n  \"specialization\": \"General Medicine & Family Practice\",\n  \"license_number\": \"LIC-2020-001\"\n}"
+            },
+            "description": "Update an existing staff member. Send all fields (full update)."
+          }
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/staff/{{staff_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "staff", "{{staff_id}}"]
+            },
+            "description": "Delete a staff member by UUID. Will cascade-delete related schedules."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Schedules",
+      "item": [
+        {
+          "name": "List All Schedules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/schedules",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schedules"]
+            },
+            "description": "Returns all schedules ordered by date and start time. Includes joined staff (name, role) and patient (name) data."
+          },
+          "response": [
+            {
+              "name": "Success 200",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"abc123...\",\n    \"staff_id\": \"def456...\",\n    \"patient_id\": \"ghi789...\",\n    \"date\": \"2026-06-29\",\n    \"start_time\": \"08:00:00\",\n    \"end_time\": \"09:00:00\",\n    \"status\": \"booked\",\n    \"type\": \"consultation\",\n    \"notes\": \"Regular checkup\",\n    \"staff\": { \"name\": \"Dr. Ahmad Fauzi\", \"role\": \"doctor\" },\n    \"patients\": { \"name\": \"Aditya Pratama\" }\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Schedule",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/schedules",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schedules"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"staff_id\": \"def456...\",\n  \"patient_id\": \"ghi789...\",\n  \"date\": \"2026-07-01\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"11:00\",\n  \"status\": \"available\",\n  \"type\": \"consultation\",\n  \"notes\": \"Initial consultation\"\n}"
+            },
+            "description": "Create a new schedule slot. `date`, `start_time`, `end_time`, and `staff_id` are required. Set `patient_id` to create a booked slot, or omit/null for an available slot."
+          },
+          "response": [
+            {
+              "name": "Created 201",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": \"new123...\",\n  \"staff_id\": \"def456...\",\n  \"patient_id\": \"ghi789...\",\n  \"date\": \"2026-07-01\",\n  \"start_time\": \"10:00:00\",\n  \"end_time\": \"11:00:00\",\n  \"status\": \"available\",\n  \"type\": \"consultation\",\n  \"notes\": \"Initial consultation\",\n  \"staff\": { \"name\": \"Dr. Ahmad Fauzi\", \"role\": \"doctor\" },\n  \"patients\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Schedule by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/schedules/{{schedule_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schedules", "{{schedule_id}}"]
+            },
+            "description": "Returns a single schedule by UUID with joined staff and patient data."
+          }
+        },
+        {
+          "name": "Update Schedule",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/schedules/{{schedule_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schedules", "{{schedule_id}}"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"staff_id\": \"def456...\",\n  \"patient_id\": \"ghi789...\",\n  \"date\": \"2026-07-01\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"11:00\",\n  \"status\": \"booked\",\n  \"type\": \"follow_up\",\n  \"notes\": \"Follow-up appointment\"\n}"
+            },
+            "description": "Update an existing schedule. Send all fields (full update)."
+          }
+        },
+        {
+          "name": "Delete Schedule",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/schedules/{{schedule_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schedules", "{{schedule_id}}"]
+            },
+            "description": "Delete a schedule slot by UUID.",
+            "response": [
+              {
+                "name": "Success 200",
+                "status": "OK",
+                "code": 200,
+                "body": "{\n  \"success\": true\n}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "patient_id",
+      "value": "9e7f7ad8-bbf1-4020-b454-4eedee7b86e9",
+      "type": "string"
+    },
+    {
+      "key": "staff_id",
+      "value": "get-from-list-staff",
+      "type": "string"
+    },
+    {
+      "key": "schedule_id",
+      "value": "get-from-list-schedules",
+      "type": "string"
+    }
+  ]
+}
