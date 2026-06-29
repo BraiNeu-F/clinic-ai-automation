@@ -1,6 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 
+export const dynamic = "force-dynamic";
+
 const STATUS_COLORS: Record<string, string> = {
   available: "bg-green-100 text-green-700",
   booked: "bg-blue-100 text-blue-700",

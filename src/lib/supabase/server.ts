@@ -28,8 +28,8 @@ export async function createServerSupabaseClient() {
 
 // Client that works in API routes (no cookie store)
 export function createClient() {
-  const { createClient } = require("@supabase/supabase-js");
-  return createClient(
+  const { createClient: _createClient } = require("@supabase/supabase-js");
+  return _createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
