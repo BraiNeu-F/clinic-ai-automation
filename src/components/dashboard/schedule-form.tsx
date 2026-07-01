@@ -38,8 +38,9 @@ export function ScheduleForm({
   schedule,
   onSaved,
 }: ScheduleFormProps) {
-  const [staffList, setStaffList] = useState<Staff[]>([]);
   const [patientList, setPatientList] = useState<Patient[]>([]);
+  const [availableStaffList, setAvailableStaffList] = useState<Staff[]>([]);
+  const [fetchingStaff, setFetchingStaff] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,32 +51,27 @@ export function ScheduleForm({
     end_time: "",
     staff_id: "",
     patient_id: "",
-    status: "available",
+    status: "booked",
     type: "consultation",
     notes: "",
   });
 
   const isEdit = !!schedule;
 
+  // Load patients on open
   useEffect(() => {
     if (!open) return;
+    fetch("/api/patients")
+      .then((r) => r.json())
+      .then((data) => setPatientList(Array.isArray(data) ? data : []))
+      .catch(() => setPatientList([]));
+  }, [open]);
 
-    setLoading(true);
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (!open) return;
     setErrors({});
-
-    Promise.all([
-      fetch("/api/staff").then((r) => r.json()),
-      fetch("/api/patients").then((r) => r.json()),
-    ])
-      .then(([staffData, patientData]) => {
-        setStaffList(Array.isArray(staffData) ? staffData : []);
-        setPatientList(Array.isArray(patientData) ? patientData : []);
-      })
-      .catch(() => {
-        setStaffList([]);
-        setPatientList([]);
-      })
-      .finally(() => setLoading(false));
+    setAvailableStaffList([]);
 
     if (schedule) {
       setForm({
@@ -88,7 +84,7 @@ export function ScheduleForm({
           : "",
         staff_id: schedule.staff_id || "",
         patient_id: schedule.patient_id || "",
-        status: schedule.status || "available",
+        status: schedule.status || "booked",
         type: schedule.type || "consultation",
         notes: schedule.notes || "",
       });
@@ -99,19 +95,51 @@ export function ScheduleForm({
         end_time: "",
         staff_id: "",
         patient_id: "",
-        status: "available",
+        status: "booked",
         type: "consultation",
         notes: "",
       });
     }
   }, [open, schedule]);
 
+  // Fetch available doctors when date + time are filled
+  useEffect(() => {
+    if (!form.date || !form.start_time || !form.end_time) {
+      setAvailableStaffList([]);
+      return;
+    }
+
+    setFetchingStaff(true);
+    const params = new URLSearchParams({
+      date: form.date,
+      start_time: form.start_time,
+      end_time: form.end_time,
+    });
+    if (schedule?.id) {
+      params.set("exclude_schedule_id", schedule.id);
+    }
+
+    fetch(`/api/staff/available?${params}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setAvailableStaffList(list);
+
+        // If current selected doctor is not in the available list, keep them anyway (edit mode)
+        if (isEdit && form.staff_id && !list.find((s: Staff) => s.id === form.staff_id)) {
+          // The API already excludes the current schedule, so this handles stale state
+        }
+      })
+      .catch(() => setAvailableStaffList([]))
+      .finally(() => setFetchingStaff(false));
+  }, [form.date, form.start_time, form.end_time, schedule?.id, isEdit]);
+
   function validate(): boolean {
     const errs: Record<string, string> = {};
     if (!form.date) errs.date = "Date is required";
     if (!form.start_time) errs.start_time = "Start time is required";
     if (!form.end_time) errs.end_time = "End time is required";
-    if (!form.staff_id) errs.staff_id = "Staff is required";
+    if (!form.staff_id) errs.staff_id = "Doctor is required";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -122,9 +150,17 @@ export function ScheduleForm({
 
     setSubmitting(true);
 
+    // Build payload — auto-derive status on create
+    const isCancel = isEdit && form.status === "available";
     const payload = {
-      ...form,
-      patient_id: form.patient_id || null,
+      date: form.date,
+      start_time: form.start_time,
+      end_time: form.end_time,
+      staff_id: form.staff_id,
+      patient_id: isCancel ? null : (form.patient_id || null),
+      status: isEdit ? form.status : (form.patient_id ? "booked" : "available"),
+      type: form.type,
+      notes: form.notes,
     };
 
     try {
@@ -149,6 +185,17 @@ export function ScheduleForm({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleFormChange(updates: Partial<ScheduleFormData>) {
+    const updated = { ...form, ...updates };
+    // Clear staff selection when date/time changes
+    if ("date" in updates || "start_time" in updates || "end_time" in updates) {
+      if (!isEdit) {
+        updated.staff_id = "";
+      }
+    }
+    setForm(updated);
   }
 
   if (!open) return null;
@@ -201,7 +248,7 @@ export function ScheduleForm({
               <input
                 type="date"
                 value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                onChange={(e) => handleFormChange({ date: e.target.value })}
                 className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${
                   errors.date ? "border-destructive" : "border-input"
                 }`}
@@ -221,7 +268,7 @@ export function ScheduleForm({
                   type="time"
                   value={form.start_time}
                   onChange={(e) =>
-                    setForm({ ...form, start_time: e.target.value })
+                    handleFormChange({ start_time: e.target.value })
                   }
                   className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${
                     errors.start_time ? "border-destructive" : "border-input"
@@ -241,7 +288,7 @@ export function ScheduleForm({
                   type="time"
                   value={form.end_time}
                   onChange={(e) =>
-                    setForm({ ...form, end_time: e.target.value })
+                    handleFormChange({ end_time: e.target.value })
                   }
                   className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${
                     errors.end_time ? "border-destructive" : "border-input"
@@ -260,22 +307,42 @@ export function ScheduleForm({
               <label className="block text-sm font-medium text-foreground mb-1">
                 Doctor/Nurse <span className="text-destructive">*</span>
               </label>
-              <select
-                value={form.staff_id}
-                onChange={(e) =>
-                  setForm({ ...form, staff_id: e.target.value })
-                }
-                className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${
-                  errors.staff_id ? "border-destructive" : "border-input"
-                }`}
-              >
-                <option value="">Select staff...</option>
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.role})
-                  </option>
-                ))}
-              </select>
+              {!form.date || !form.start_time || !form.end_time ? (
+                <p className="text-sm text-muted-foreground py-2">
+                  Select date and time to see available doctors
+                </p>
+              ) : fetchingStaff ? (
+                <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Loading available doctors...
+                </div>
+              ) : (
+                <select
+                  value={form.staff_id}
+                  onChange={(e) =>
+                    handleFormChange({ staff_id: e.target.value })
+                  }
+                  className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${
+                    errors.staff_id ? "border-destructive" : "border-input"
+                  }`}
+                >
+                  <option value="">Select doctor...</option>
+                  {availableStaffList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.role})
+                    </option>
+                  ))}
+                </select>
+              )}
+              {availableStaffList.length === 0 &&
+                form.date &&
+                form.start_time &&
+                form.end_time &&
+                !fetchingStaff && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    No doctors available at this time
+                  </p>
+                )}
               {errors.staff_id && (
                 <p className="mt-1 text-xs text-destructive">
                   {errors.staff_id}
@@ -291,7 +358,7 @@ export function ScheduleForm({
               <select
                 value={form.patient_id}
                 onChange={(e) =>
-                  setForm({ ...form, patient_id: e.target.value })
+                  handleFormChange({ patient_id: e.target.value })
                 }
                 className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               >
@@ -304,8 +371,24 @@ export function ScheduleForm({
               </select>
             </div>
 
-            {/* Status & Type */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Type */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Type
+              </label>
+              <select
+                value={form.type}
+                onChange={(e) => handleFormChange({ type: e.target.value })}
+                className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="consultation">Consultation</option>
+                <option value="follow_up">Follow Up</option>
+                <option value="procedure">Procedure</option>
+              </select>
+            </div>
+
+            {/* Status — edit mode only */}
+            {isEdit && (
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
                   Status
@@ -313,33 +396,22 @@ export function ScheduleForm({
                 <select
                   value={form.status}
                   onChange={(e) =>
-                    setForm({ ...form, status: e.target.value })
+                    handleFormChange({ status: e.target.value })
                   }
                   className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
                 >
-                  <option value="available">Available</option>
                   <option value="booked">Booked</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Mark as Completed</option>
+                  <option value="available">Cancel Booking</option>
                 </select>
+                {form.status === "available" && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    This will release the slot — patient will be removed and
+                    status set to available.
+                  </p>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Type
-                </label>
-                <select
-                  value={form.type}
-                  onChange={(e) =>
-                    setForm({ ...form, type: e.target.value })
-                  }
-                  className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
-                >
-                  <option value="consultation">Consultation</option>
-                  <option value="follow_up">Follow Up</option>
-                  <option value="procedure">Procedure</option>
-                </select>
-              </div>
-            </div>
+            )}
 
             {/* Notes */}
             <div>
@@ -349,7 +421,7 @@ export function ScheduleForm({
               <textarea
                 value={form.notes}
                 onChange={(e) =>
-                  setForm({ ...form, notes: e.target.value })
+                  handleFormChange({ notes: e.target.value })
                 }
                 rows={3}
                 className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary resize-none"

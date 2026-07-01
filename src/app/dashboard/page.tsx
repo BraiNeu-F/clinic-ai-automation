@@ -26,7 +26,9 @@ export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient();
 
   // Fetch all counts in parallel
-  const todayStr = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+  const currentTime = now.toTimeString().split(" ")[0]; // HH:MM:SS
 
   const [
     patientsCount,
@@ -58,9 +60,9 @@ export default async function DashboardPage() {
     supabase
       .from("schedules")
       .select("date, start_time, end_time, status, staff(name), patients(name)")
-      .order("date", { ascending: true })
-      .order("start_time", { ascending: true })
-      .limit(5),
+      .eq("date", todayStr)
+      .gt("end_time", currentTime)
+      .order("start_time", { ascending: true }),
   ]);
 
   const totalPatients = patientsCount.count ?? 0;
@@ -135,7 +137,7 @@ export default async function DashboardPage() {
               </table>
             ) : (
               <div className="px-6 py-8 text-center text-sm text-muted-foreground">
-                No data
+                No upcoming appointments for today
               </div>
             )}
           </div>

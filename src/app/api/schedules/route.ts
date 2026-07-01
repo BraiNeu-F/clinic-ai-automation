@@ -7,7 +7,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("schedules")
     .select("*, staff(name, role), patients(name)")
-    .order("date", { ascending: true })
+    .order("date", { ascending: false })
     .order("start_time", { ascending: true });
 
   if (error) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       date: body.date,
       start_time: body.start_time,
       end_time: body.end_time,
-      status: body.status || "available",
+      status: body.patient_id ? "booked" : "available",
       type: body.type || "consultation",
       notes: body.notes,
     })
